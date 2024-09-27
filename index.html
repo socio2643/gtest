@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gay 수치 측정기</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        #unicornImage {
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        #nameInput {
+            font-size: 28px;
+            padding: 15px;
+            width: 90%;
+            max-width: 500px;
+            margin: 20px 0;
+            text-align: center;
+            border: 2px solid #ccc;
+            border-radius: 10px;
+        }
+        button {
+            font-size: 24px;
+            padding: 15px 30px;
+            margin: 20px 0;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #unicornMessage, #result, #warning {
+            font-size: 24px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #unicornMessage {
+            color: #ff69b4;
+            font-weight: bold;
+        }
+        #warning {
+            color: red;
+        }
+        h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <img id="unicornImage" src="유니콘 게이.jpg" style="display: none;" alt="유니콘 게이 이미지">
+    <h1>Gay 수치 측정기</h1>
+    <input type="text" id="nameInput" placeholder="이름을 입력하세요">
+    <button onclick="measureGayness()">측정하기</button>
+    <div id="result"></div>
+    <div id="unicornMessage"></div>
+    <div id="warning"></div>
+    <div id="debug"></div>
+
+    <script>
+        const resultCache = {};
+        const measureCount = {};
+
+        function measureGayness() {
+            const name = document.getElementById('nameInput').value.trim();
+            const resultElement = document.getElementById('result');
+            const unicornImage = document.getElementById('unicornImage');
+            const unicornMessage = document.getElementById('unicornMessage');
+            const warningElement = document.getElementById('warning');
+
+            // 새 측정 시작 시 이전 결과 초기화
+            unicornImage.style.display = 'none';
+            unicornMessage.textContent = '';
+            warningElement.textContent = '';
+
+            if (name === '') {
+                warningElement.textContent = '이름을 입력해주세요.';
+                return;
+            }
+
+            if (name in measureCount) {
+                measureCount[name]++;
+            } else {
+                measureCount[name] = 1;
+            }
+
+            if (measureCount[name] > 3) {
+                warningElement.textContent = '결과를 부정하지 마세요!';
+                return;
+            } else {
+                warningElement.textContent = '';
+            }
+
+            let gayness;
+            if (name in resultCache) {
+                gayness = resultCache[name];
+            } else {
+                if (name.toLowerCase() === '이시우') {
+                    gayness = 101;
+                } else {
+                    gayness = Math.floor(Math.random() * 101);
+                }
+                resultCache[name] = gayness;
+            }
+
+            animateGayness(name, gayness, 5000, resultElement, function() {
+                if (gayness >= 100) {
+                    unicornImage.style.display = 'block';
+                    unicornMessage.textContent = `놀랍습니다! ${name}님은 희귀한 유니콘 게이입니다!`;
+                } else {
+                    unicornImage.style.display = 'none';
+                    unicornMessage.textContent = '';
+                }
+            });
+        }
+
+        function easeOutElastic(t) {
+            const p = 0.3;
+            return Math.pow(2, -10 * t) * Math.sin((t - p / 4) * (2 * Math.PI) / p) + 1;
+        }
+
+        function animateGayness(name, finalValue, duration, element, completeCallback) {
+            const startTime = performance.now();
+            const fastDuration = duration * 0.8; // 4초
+            const slowDuration = duration * 0.2; // 1초
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                
+                if (elapsed < fastDuration) {
+                    // 빠른 애니메이션 (1-100 반복)
+                    const fastProgress = (elapsed % 1000) / 1000; // 1초마다 리셋
+                    const fastValue = Math.floor(fastProgress * 100) + 1;
+                    element.textContent = `${name}의 Gay 수치는 ${fastValue}%입니다!`;
+                } else {
+                    // 느린 애니메이션 (최종 값으로 수렴)
+                    const slowElapsed = elapsed - fastDuration;
+                    const slowProgress = Math.min(slowElapsed / slowDuration, 1);
+                    const easedProgress = easeOutElastic(slowProgress);
+                    let currentValue;
+                    if (finalValue > 100) {
+                        currentValue = Math.floor(100 + (finalValue - 100) * easedProgress);
+                    } else {
+                        currentValue = Math.floor(finalValue + (100 - finalValue) * (1 - easedProgress));
+                    }
+                    element.textContent = `${name}의 Gay 수치는 ${currentValue}%입니다!`;
+                }
+
+                if (elapsed < duration) {
+                    requestAnimationFrame(update);
+                } else {
+                    element.textContent = `${name}의 Gay 수치는 ${finalValue}%입니다!`;
+                    completeCallback();
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+    </script>
+</body>
+</html>
